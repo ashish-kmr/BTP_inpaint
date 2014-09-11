@@ -2,6 +2,7 @@ function [ img,init_img ] = inpaint( C )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 % 300 - 310, 450 - 480
+% inpainting average values
 img=imread('cameraman.tif');
 x1=300;
 x2=310;
