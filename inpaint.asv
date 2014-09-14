@@ -81,7 +81,7 @@ while(len>0)
    end
        
 end
-imshow(img)
+
 end
 
 
@@ -166,7 +166,7 @@ function [pix] = inpaint_pixel(img,k,l,flag)
         pix=pix/cnt;
 end
 
-function [sol] = solve(T,flag,i1,j1,i2,j2)
+function [val] = solve(T,flag,i1,j1,i2,j2)
         sol=1000000;
         
         if flag(i1,j1)==0
