@@ -74,7 +74,7 @@ while(len>0)
    end
        
 end
-
+imshow(img)
 end
 
 
