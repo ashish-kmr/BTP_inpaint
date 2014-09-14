@@ -16,7 +16,7 @@ T([300:310],[450:480])=1000000;
 % 0-- known, 1--band, 2-- inside
 flag([299:311],[449:481])=1;
 flag([300:310],[450:480])=2;
-
+imshow(img)
 q=zeros(100000,3);
 curr=1;
 len=1;
@@ -48,40 +48,43 @@ while(len>0)
    q(id,1)=-1;
    len=len-1;
    flag(q(id,2),q(id,3))=0;
+   
    %disp(flag([300:310],[450:480]))
    %pause
    for k=q(id,2)-1:q(id,2)+1
        for l=q(id,3)-1:q(id,3)+1
        	   if (k==q(id,2) &&  l==q(id,3)) || (k~=q(id,2) && l~=q(id,3))
-               disp('Case 1 break')
                continue;
            end
            %disp(k)
            %disp(l)
            if flag(k,l)==0
-               disp('Case 2 break')
                continue;
            end
            if flag(k,l)==2
                flag(k,l)=1;
-               [pix_val]=inpaint_pixel(img,k,l,flag);
+               [pix_val]=inpaint_pixel(img,k,l,flag,T);
+               disp('hey')
                img(k,l)=pix_val;
+               disp(img(k,l))
+               disp('hey')
            end
            disp('finally')
            w1=solve(T,flag,k-1,l,k,l-1)
-           disp('finally')
+           disp(w1)
            
            w2=solve(T,flag,k-1,l,k,l-1)
            w3=solve(T,flag,k-1,l,k,l+1)
            w4=solve(T,flag,k+1,l,k,l+1)
            T(k,l)=minOf4(w1,w2,w3,w4);
+           disp(T(k,l))
            [q,curr]=insertPQ(q,curr,T(k,l),k,l);
            len=len+1;
        end
    end
        
 end
-
+imshow(img)
 end
 
 
@@ -138,35 +141,53 @@ function [min_v] = minOf4(a,b,c,d)
 end
 
 
-function [pix] = inpaint_pixel(img,k,l,flag)
+function [pix] = inpaint_pixel(img,i,j,flag,T)
         %disp('inpainting')
         %pause;
-        pix=0;
-        cnt=1;
-        if flag(k-1,l)~=2
-            pix=pix+img(k-1,l);
-            cnt=cnt+1;
+        Ia=0
+        s=0
+        for k=i-1:i+1
+            for l=j-1:j+1
+                if (k==i &&  l==j) || (k~=i && l~=j)
+                    disp('Case 1 break')
+                    continue;
+                end
+                
+           %disp(k)
+           %disp(l)
+               if (flag(k,l)==0)
+                   disp('Case 2 break')
+                   continue;
+               end
+               gradx=[T(i+1,j)-T(i-1,j)]/2
+               grady=[T(i,j+1)-T(i,j-1)]/2
+
+              %r = vector from (i,j) to (k,l);
+              rx=k-i
+              ry=l-j
+              len=sqrt(rx*rx+ry*ry)
+              dir = (rx*gradx+ry*grady)/len;
+              dst = 1/(len*len);
+              if T(k,l)>=T(i,j)
+                  lev = 1/(1+(T(k,l)-T(i,j)));
+              else
+                  lev = 1/(1+(T(i,j)-T(k,l)));
+              end    
+              w = dir*dst*lev;
+              
+              if flag(k+1,l)~=0 && flag(k-1,l)~=0 && flag(k,l+1)~=0 && flag(k,l-1)~=0
+                  gradIx = [img(i+1,j)-img(i-1,j)]/2
+                  gradIy = [img(i,j+1)-img(i,j-1)]/2
+                  Ia = Ia + (w * (img(k,l) + gradIx * rx + gradIy*ry));
+                  s = s + w;
+              end
+            end
         end
-        if flag(k+1,l)~=2
-            pix=pix+img(k+1,l);
-            cnt=cnt+1;
-        end
-        if flag(k,l-1)~=2
-            pix=pix+img(k,l-1);
-            cnt=cnt+1;
-        end
-        if flag(k,l+1)~=2
-            pix=pix+img(k,l+1);
-            cnt=cnt+1;
-        end
-        
-        if cnt>2
-            cnt=2;
-        end
-        pix=pix/cnt;
+                pix = Ia/s;
+                
 end
 
-function [val] = solve(T,flag,i1,j1,i2,j2)
+function [sol] = solve(T,flag,i1,j1,i2,j2)
         sol=1000000;
         
         if flag(i1,j1)==0
@@ -174,7 +195,7 @@ function [val] = solve(T,flag,i1,j1,i2,j2)
                 disp('CASE11')
                 r=sqrt(2*T(i1,j1)*T(i2,j2)*T(i1,j1)*T(i2,j2))
                 s=(T(i1,j1)+T(i2,j2)*r)/2
-                if (s>=T(i1,j1) && s>=T(i2,j2))
+                if (s>T(i1,j1) && s>T(i2,j2))
                     sol=s;
                 else
                     s=s+r;
