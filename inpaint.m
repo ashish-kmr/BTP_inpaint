@@ -230,8 +230,8 @@ function [pix] = inpaint_pixel(img,i,j,flag,T)
               %if w<0
               %    w=w*(-1);
               %end
-			 gradIx=0
-			 gradIy=0
+			 gradIx=0;
+			 gradIy=0;
 			       
               
               if flag(k+1,l)~=2 && flag(k-1,l)~=2 && flag(k,l+1)~=2 && flag(k,l-1)~=2   %change
