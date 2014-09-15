@@ -142,30 +142,34 @@ end
 
 
 function [pix] = inpaint_pixel(img,i,j,flag,T)
+        i
+        j
+        
+        %k=img(i,j)
+        'sss'
+        
         %disp('inpainting')
         %pause;
         Ia=0
         s=0
-        for k=i-1:i+1
-            for l=j-1:j+1
-                if (k==i &&  l==j) || (k~=i && l~=j)
-                    disp('Case 1 break')
-                    continue;
-                end
+        for k=i-10:i+10
+            for l=j-10:j+10
+                t=img(k,l)
+                
                 
            %disp(k)
            %disp(l)
-               if (flag(k,l)==0)
+               if (flag(k,l)==2)  % change ; wrong in book
                    disp('Case 2 break')
                    continue;
                end
-               gradx=[T(i+1,j)-T(i-1,j)]/2
-               grady=[T(i,j+1)-T(i,j-1)]/2
+               gradx=[T(i+1,j)-T(i-1,j)]/2;
+               grady=[T(i,j+1)-T(i,j-1)]/2;
 
               %r = vector from (i,j) to (k,l);
-              rx=k-i
-              ry=l-j
-              len=sqrt(rx*rx+ry*ry)
+              rx=k-i;
+              ry=l-j;
+              len=sqrt(rx*rx+ry*ry);
               dir = (rx*gradx+ry*grady)/len;
               dst = 1/(len*len);
               if T(k,l)>=T(i,j)
@@ -173,18 +177,36 @@ function [pix] = inpaint_pixel(img,i,j,flag,T)
               else
                   lev = 1/(1+(T(i,j)-T(k,l)));
               end    
-              'smriti'
+              'ashish'
+              dst
+              dir
+              lev
               w = dir*dst*lev
-              'smriti'
-              if flag(k+1,l)~=0 && flag(k-1,l)~=0 && flag(k,l+1)~=0 && flag(k,l-1)~=0
-                  gradIx = [img(i+1,j)-img(i-1,j)]/2
-                  gradIy = [img(i,j+1)-img(i,j-1)]/2
-                  Ia = Ia + (w * (img(k,l) + gradIx * rx + gradIy*ry));
-                  s = s + w;
+              'ashish'
+              
+              if w<0
+                  w=w*(-1)
               end
+                  
+              
+              if flag(k+1,l)~=2 && flag(k-1,l)~=2 && flag(k,l+1)~=2 && flag(k,l-1)~=2   %chaneg
+                  gradIx = [img(i+1,j)-img(i-1,j)]/2;
+                  gradIy = [img(i,j+1)-img(i,j-1)]/2;
+                     
+                  Ia = Ia + (w * img(k,l) + gradIx * rx + gradIy*ry);
+                  s = s + w;
+
+            end
             end
         end
-                pix = Ia/s;
+        
+                'smriti'
+                pix = Ia/s
+                w
+                
+                'smriti'
+                
+                
                 
 end
 
@@ -195,7 +217,7 @@ function [sol] = solve(T,flag,i1,j1,i2,j2)
             if flag(i2,j2)==0
                 r=sqrt(2*T(i1,j1)*T(i2,j2)*T(i1,j1)*T(i2,j2))
                 s=(T(i1,j1)+T(i2,j2)*r)/2
-                if (s>T(i1,j1) && s>T(i2,j2))
+                if (s>=T(i1,j1) && s>=T(i2,j2))
                     sol=s;
                 else
                     s=s+r;
@@ -204,11 +226,11 @@ function [sol] = solve(T,flag,i1,j1,i2,j2)
                     end
                 end
             else
-                sol=1+T(i1,j1)
+                sol=1+T(i1,j1);
             end
         else
             if flag(i2,j2)==0
-                s=1+T(i2,j2)
+                sol=1+T(i2,j2);
             end
         end
         
