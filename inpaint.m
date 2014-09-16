@@ -25,6 +25,9 @@ q=zeros(100000,3);
 
 curr=1;
 len=1;
+
+
+
 for i=3:dim(1)-2
     for j=3:dim(2)-2
 		if(img(i,j)~=255 && (img(i+1,j)==255 || img(i,j+1)==255 || img(i-1,j)==255 || img(i,j-1)==255))
@@ -36,6 +39,8 @@ for i=3:dim(1)-2
 		end			
     end
 end
+
+
 
 for i=1:dim(1)
     for j=1:dim(2)
