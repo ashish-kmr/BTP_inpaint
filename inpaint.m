@@ -3,23 +3,40 @@ function [ img,init_img ] = inpaint()
 %   Detailed explanation goes here
 % 300 - 310, 450 - 480
 % inpainting average values
-img=imread('cameraman.tif');
+img=imread('Ashish.tif');
 x1=300;
-x2=310;
+x2=301;
 y1=450;
 y2=480;
 dim=size(img);
 flag=zeros(dim(1),dim(2));
 T=zeros(dim(1),dim(2));
-img([300:310],[450:480])=-1;
-T([300:310],[450:480])=1000000;
+for i=1:dim(1)
+for j=1:dim(2)
+T(i,j)=0;
+end
+end
+%img([x1:x2],[y1:y2])=-1;
+%T([x1:x2],[y1:y1])=1000000;
 % 0-- known, 1--band, 2-- inside
-flag([299:311],[449:481])=1;
-flag([300:310],[450:480])=2;
-imshow(img)
+%flag([x1-1:x2+1],[y1-1:y2+1])=1;
+%flag([x1:x2],[y1:y2])=2;
 q=zeros(100000,3);
+
 curr=1;
 len=1;
+for i=3:dim(1)-2
+    for j=3:dim(2)-2
+		if(img(i,j)~=255 && (img(i+1,j)==255 || img(i,j+1)==255 || img(i-1,j)==255 || img(i,j-1)==255))
+			flag(i,j)=1;
+		end
+		if(img(i,j)==255)
+			flag(i,j)=2;
+			T(i,j)=1000000;
+		end			
+    end
+end
+
 for i=1:dim(1)
     for j=1:dim(2)
         if (flag(i,j)==1)
@@ -64,27 +81,24 @@ while(len>0)
            if flag(k,l)==2
                flag(k,l)=1;
                [pix_val]=inpaint_pixel(img,k,l,flag,T);
-               disp('hey')
                img(k,l)=pix_val;
-               disp(img(k,l))
-               disp('hey')
+			   %disp(k)
+			   %disp(l)
+			   %pause
            end
            
-           w1=solve(T,flag,k-1,l,k,l-1)
-         
-           
-           w2=solve(T,flag,k-1,l,k,l-1)
-           w3=solve(T,flag,k-1,l,k,l+1)
-           w4=solve(T,flag,k+1,l,k,l+1)
+           w1=solve(T,flag,k-1,l,k,l-1);           
+           w2=solve(T,flag,k-1,l,k,l-1);
+           w3=solve(T,flag,k-1,l,k,l+1);
+           w4=solve(T,flag,k+1,l,k,l+1);
            T(k,l)=minOf4(w1,w2,w3,w4);
-           disp(T(k,l))
            [q,curr]=insertPQ(q,curr,T(k,l),k,l);
            len=len+1;
        end
    end
        
 end
-imshow(img)
+%imshow(img)
 end
 
 
@@ -107,24 +121,21 @@ end
 
 function [q, curr ] = insertPQ( q1, curr1, T_val, k, l )
 
-test=1; 
-for it=1:curr1
-       if q1(it,1)==-1
-           q1(it,1)=T_val;
-           q1(it,2)=k;
-           q1(it,3)=l;
-           test=0;
-           curr=curr1;
-           break
-       end
-end
-if test==1
-       q1(curr1,1)=T_val;
-       q1(curr1,2)=k;
-       q1(curr1,3)=l;
-       curr=curr1+1;
-end
-q=q1;
+		test=0;
+		for i=1:curr1-1
+			if (q1(i,2)==k && q1(i,3)==l)
+				q(i,1)=T_val;
+				test=1;
+				curr=curr1;
+			end
+		end
+		if test==0
+			q1(curr1,1)=T_val;
+			q1(curr1,2)=k;
+			q1(curr1,3)=l;
+			curr=curr1+1;
+		end
+		q=q1;
 end
 
 function [min_v] = minOf4(a,b,c,d)
@@ -141,26 +152,27 @@ function [min_v] = minOf4(a,b,c,d)
 end
 
 
+
 function [pix] = inpaint_pixel(img,i,j,flag,T)
-        i
-        j
+        %i
+        %j
         
         %k=img(i,j)
-        'sss'
+        %'sss'
         
         %disp('inpainting')
         %pause;
-        Ia=0
-        s=0
-        for k=i-10:i+10
-            for l=j-10:j+10
-                t=img(k,l)
+        Ia=0;
+        s=0;
+        for k=i-2:i+2
+            for l=j-2:j+2
+                t=img(k,l);
                 
                 
            %disp(k)
            %disp(l)
                if (flag(k,l)==2)  % change ; wrong in book
-                   disp('Case 2 break')
+                   %disp('Case 2 break')
                    continue;
                end
                gradx=[T(i+1,j)-T(i-1,j)]/2;
@@ -171,52 +183,54 @@ function [pix] = inpaint_pixel(img,i,j,flag,T)
               ry=l-j;
               len=sqrt(rx*rx+ry*ry);
               dir = (rx*gradx+ry*grady)/len;
+			  dst=0;
+			  if len>0	
               dst = 1/(len*len);
+			  end
               if T(k,l)>=T(i,j)
                   lev = 1/(1+(T(k,l)-T(i,j)));
               else
                   lev = 1/(1+(T(i,j)-T(k,l)));
               end    
-              'ashish'
-              dst
-              dir
-              lev
-              w = dir*dst*lev
-              'ashish'
+              %'ashish'
+              %dst
+              %dir
+              %lev
+              %w = dir*dst*lev;
+			  w=dst;
+              %'ashish'
               
-              if w<0
-                  w=w*(-1)
-              end
-                  
+              %if w<0
+              %    w=w*(-1);
+              %end
+       
               
               if flag(k+1,l)~=2 && flag(k-1,l)~=2 && flag(k,l+1)~=2 && flag(k,l-1)~=2   %chaneg
                   gradIx = [img(i+1,j)-img(i-1,j)]/2;
                   gradIy = [img(i,j+1)-img(i,j-1)]/2;
                      
-                  Ia = Ia + (w * img(k,l) + gradIx * rx + gradIy*ry);
+                  Ia = Ia + (w * img(k,l)); %+ gradIx * rx + gradIy*ry);
                   s = s + w;
 
             end
             end
         end
         
-                'smriti'
-                pix = Ia/s
-                w
+                %'smriti'
+                pix = Ia/(s);
+                %w
                 
-                'smriti'
+                %'smriti'
                 
                 
                 
 end
-
 function [sol] = solve(T,flag,i1,j1,i2,j2)
         sol=1000000;
-        
         if flag(i1,j1)==0
             if flag(i2,j2)==0
-                r=sqrt(2*T(i1,j1)*T(i2,j2)*T(i1,j1)*T(i2,j2))
-                s=(T(i1,j1)+T(i2,j2)*r)/2
+                r=sqrt(2*T(i1,j1)*T(i2,j2)*T(i1,j1)*T(i2,j2));
+                s=(T(i1,j1)+T(i2,j2)*r)/2;
                 if (s>=T(i1,j1) && s>=T(i2,j2))
                     sol=s;
                 else
@@ -235,9 +249,4 @@ function [sol] = solve(T,flag,i1,j1,i2,j2)
         end
         
 end
-                     
-                    
-                     
-                     
-
-
+     
